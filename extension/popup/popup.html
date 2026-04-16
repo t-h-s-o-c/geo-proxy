@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoProxy</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+        <span>GeoProxy</span>
+      </div>
+      <div class="status-indicator active" id="statusIndicator">
+        <span class="status-dot"></span>
+        <span class="status-text">Active</span>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="current-domain" id="currentDomainSection">
+        <div class="section-title">Current Page</div>
+        <div class="domain-card" id="currentDomain">
+          <div class="domain-name">-</div>
+          <div class="domain-status">
+            <span class="badge badge-default">Unknown</span>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" id="addCurrentBtn" style="display: none;">
+          Add to Proxy
+        </button>
+      </div>
+
+      <div class="stats-section">
+        <div class="stat-item">
+          <div class="stat-value" id="domainCount">0</div>
+          <div class="stat-label">Total Domains</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="activeCount">0</div>
+          <div class="stat-label">Active</div>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="btn btn-icon" id="openEditorBtn" title="Domain Editor">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </button>
+        <button class="btn btn-icon" id="refreshBtn" title="Refresh">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+        </button>
+        <button class="btn btn-icon" id="importBtn" title="Import Domains">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="recent-section">
+        <div class="section-title">Active Domains</div>
+        <div class="domain-list" id="domainList">
+          <div class="empty-state">No domains yet</div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <a href="#" id="settingsLink">Domain Editor</a>
+      <span class="version">v1.0.0</span>
+    </footer>
+  </div>
+
+  <div class="modal" id="importModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Import Domains</h3>
+        <button class="modal-close" id="closeImport">&times;</button>
+      </div>
+      <div class="modal-body">
+        <textarea id="importTextarea" placeholder="Enter domains (one per line or JSON array)"></textarea>
+        <div class="import-help">
+          <p>Supported formats:</p>
+          <ul>
+            <li>Plain text (one domain per line)</li>
+            <li>JSON array: ["domain1.com", "domain2.com"]</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelImport">Cancel</button>
+        <button class="btn btn-primary" id="confirmImport">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

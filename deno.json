@@ -1,0 +1,9 @@
+{
+  "name": "geo-proxy",
+  "description": "Geo-blocking bypass proxy for Russia",
+  "version": "1.0.0",
+  "exports": "./deno-server.ts",
+  "tasks": {
+    "start": "deno run --allow-net --allow-env ./deno-server.ts"
+  }
+}

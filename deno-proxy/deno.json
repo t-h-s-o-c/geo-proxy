@@ -1,0 +1,6 @@
+{
+  "name": "geo-proxy",
+  "description": "Geo-blocking bypass proxy for Russia",
+  "version": "1.0.0",
+  "exports": "./server.ts"
+}

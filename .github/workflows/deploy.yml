@@ -1,0 +1,19 @@
+name: Deploy to Deno Deploy
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v2.x
+          
+      - name: Deploy
+        run: |
+          deno deploy deploy --token=${{ secrets.DENO_DEPLOY_TOKEN }} --app=geo-proxy-rf --endpoint=deno-server.ts

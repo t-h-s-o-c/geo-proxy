@@ -1,0 +1,10 @@
+{
+  "name": "geoproxy-server",
+  "version": "1.0.0",
+  "description": "HTTP CONNECT proxy for bypassing geo-blocks",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  }
+}

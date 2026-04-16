@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoProxy - Domain Editor</title>
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          <span>GeoProxy Editor</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="importBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Import
+        </button>
+        <button class="btn btn-secondary" id="exportBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Export
+        </button>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search domains...">
+      </div>
+      <div class="filter-group">
+        <select id="filterSelect">
+          <option value="all">All domains</option>
+          <option value="active">Active only</option>
+          <option value="inactive">Inactive only</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="addDomainBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Domain
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table class="domain-table">
+        <thead>
+          <tr>
+            <th class="col-toggle">Active</th>
+            <th class="col-pattern">Pattern</th>
+            <th class="col-description">Description</th>
+            <th class="col-date">Added</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="domainTableBody">
+          <tr class="loading-row">
+            <td colspan="5">Loading domains...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="footer">
+      <div class="stats">
+        <span id="totalCount">0</span> total
+        <span class="separator">|</span>
+        <span id="activeCount">0</span> active
+      </div>
+    </footer>
+  </div>
+
+  <div class="modal" id="addModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add Domain</h3>
+        <button class="modal-close" id="closeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="domainPattern">Domain Pattern *</label>
+          <input type="text" id="domainPattern" placeholder="e.g., *.example.com or api.openai.com">
+          <small>Use *.domain.com for wildcard matching</small>
+        </div>
+        <div class="form-group">
+          <label for="domainDescription">Description</label>
+          <input type="text" id="domainDescription" placeholder="e.g., OpenAI API">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelModal">Cancel</button>
+        <button class="btn btn-primary" id="saveModal">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="importModal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3>Import Domains</h3>
+        <button class="modal-close" id="closeImport">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="preset-section">
+          <h4>Quick Presets</h4>
+          <div class="preset-buttons">
+            <button class="btn btn-sm" data-preset="ai">AI Services</button>
+            <button class="btn btn-sm" data-preset="github">GitHub</button>
+            <button class="btn btn-sm" data-preset="all">All Common</button>
+          </div>
+        </div>
+        <div class="divider"><span>or paste manually</span></div>
+        <textarea id="importTextarea" placeholder="Paste domains here (one per line or JSON array)..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelImport">Cancel</button>
+        <button class="btn btn-primary" id="confirmImport">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="editor.js"></script>
+</body>
+</html>

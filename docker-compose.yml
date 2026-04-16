@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  proxy:
+    build:
+      context: ./proxy-server
+      dockerfile: Dockerfile
+    container_name: geoproxy-server
+    ports:
+      - "127.0.0.1:3128:3128"
+    environment:
+      - NODE_ENV=production
+      - PROXY_PORT=3128
+      - CLOUDFLARE_HOST=cloudflared
+      - CLOUDFLARE_PORT=1080
+    volumes:
+      - ./proxy-server/config:/app/config
+    restart: unless-stopped
+    depends_on:
+      - cloudflared
+    networks:
+      - geoproxy
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: geoproxy-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - geoproxy
+
+networks:
+  geoproxy:
+    driver: bridge
