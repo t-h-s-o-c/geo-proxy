@@ -2,60 +2,62 @@ const PROXY_HOST = 'localhost';
 const PROXY_PORT = 3000;
 const STORAGE_KEY = 'geoproxy_domains';
 const USE_DENO_DEPLOY = true;
-const DENO_DEPLOY_URL = 'https://geo-proxy-rf-rrtnrdjztkjv.t-h-s-o-c.deno.net';
+const DENO_DEPLOY_URL = 'https://geo-proxy-rf.t-h-s-o-c.deno.net';
 
 let domains = [];
 let proxyUrl = USE_DENO_DEPLOY ? DENO_DEPLOY_URL : `http://${PROXY_HOST}:${PROXY_PORT}`;
 
-function matchesDomain(hostname) {
+const RULE_ID_START = 1;
+
+async function updateProxyRules() {
+  const rules = [];
+  let ruleId = RULE_ID_START;
+
   for (const domain of domains) {
     if (!domain.active) continue;
     
-    const pattern = domain.pattern;
+    let pattern = domain.pattern;
+    let cleanPattern;
+    let urlFilter;
+    
     if (pattern.startsWith('*.')) {
-      const base = pattern.slice(2);
-      if (hostname === base || hostname.endsWith('.' + base)) return true;
+      cleanPattern = pattern.slice(2);
+      urlFilter = `.*\\.${cleanPattern.replace(/\./g, '\\.')}.*`;
     } else if (pattern.startsWith('*')) {
-      const base = pattern.slice(1);
-      if (hostname.endsWith(base)) return true;
+      cleanPattern = pattern.slice(1);
+      urlFilter = `.*${cleanPattern.replace(/\./g, '\\.')}.*`;
     } else {
-      if (hostname === pattern || hostname.endsWith('.' + pattern)) return true;
+      cleanPattern = pattern;
+      urlFilter = `.*${cleanPattern.replace(/\./g, '\\.')}.*`;
     }
-  }
-  return false;
-}
-
-function setupWebRequest() {
-  chrome.webRequest.onBeforeRequest.removeListener(handleRequest);
-  chrome.webRequest.onBeforeRequest.addListener(
-    handleRequest,
-    { urls: ['<all_urls>'] },
-    ['blocking']
-  );
-}
-
-function handleRequest(request) {
-  const url = new URL(request.url);
-  const hostname = url.hostname;
-  
-  if (matchesDomain(hostname)) {
-    const proxyTarget = `${hostname}${url.pathname}${url.search}`;
-    const redirectUrl = `${proxyUrl}/?h=${encodeURIComponent(proxyTarget)}`;
     
-    console.log(`Redirecting: ${hostname} -> ${proxyUrl}`);
-    
-    return { redirectUrl };
+    rules.push({
+      id: ruleId++,
+      priority: 1,
+      action: {
+        type: 'redirect',
+        redirect: {
+          url: `${proxyUrl}/?h=${encodeURIComponent(cleanPattern)}`
+        }
+      },
+      condition: {
+        urlFilter: urlFilter,
+        resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'script', 'stylesheet']
+      }
+    });
   }
-  
-  return {};
-}
 
-async function updateProxyConfig() {
   try {
-    setupWebRequest();
-    console.log(`Proxy updated: ${domains.filter(d => d.active).length} active domains`);
+    const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+    const existingIds = existingRules.map(r => r.id);
+    
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: existingIds,
+      addRules: rules
+    });
+    console.log(`Proxy rules updated: ${rules.length} rules`);
   } catch (error) {
-    console.error('Failed to update proxy:', error);
+    console.error('Failed to update rules:', error);
   }
 }
 
@@ -63,7 +65,7 @@ async function loadDomains() {
   try {
     const result = await chrome.storage.local.get(STORAGE_KEY);
     domains = result[STORAGE_KEY] || [];
-    await updateProxyConfig();
+    await updateProxyRules();
   } catch (error) {
     console.error('Failed to load domains:', error);
     domains = [];
@@ -72,18 +74,7 @@ async function loadDomains() {
 
 async function saveDomains() {
   await chrome.storage.local.set({ [STORAGE_KEY]: domains });
-  await updateProxyConfig();
-}
-
-function matchesPattern(hostname, pattern) {
-  if (pattern.startsWith('*.')) {
-    const base = pattern.slice(2);
-    return hostname === base || hostname.endsWith('.' + base);
-  } else if (pattern.startsWith('*')) {
-    const base = pattern.slice(1);
-    return hostname.endsWith(base);
-  }
-  return hostname === pattern || hostname.endsWith('.' + pattern);
+  await updateProxyRules();
 }
 
 async function addDomain(pattern, description = '') {
@@ -146,34 +137,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: true, domain: toggled });
         break;
         
-      case 'UPDATE_DOMAIN':
-        const domain = domains.find(d => d.pattern === message.pattern);
-        if (domain) {
-          if (message.description !== undefined) domain.description = message.description;
-          if (message.active !== undefined) domain.active = message.active;
-          await saveDomains();
-          sendResponse({ success: true, domain });
-        } else {
-          sendResponse({ success: false, error: 'Domain not found' });
-        }
-        break;
-        
-      case 'IMPORT_DOMAINS':
-        const imported = [];
-        for (const item of message.domains) {
-          const pattern = typeof item === 'string' ? item : item.pattern;
-          const desc = typeof item === 'object' ? (item.description || '') : '';
-          const active = typeof item === 'object' ? (item.active !== false) : true;
-          
-          if (!domains.find(d => d.pattern === pattern)) {
-            domains.push({ pattern, description: desc, active, addedAt: new Date().toISOString() });
-            imported.push(pattern);
-          }
-        }
-        await saveDomains();
-        sendResponse({ success: true, imported, total: imported.length });
-        break;
-        
       case 'GET_STATUS':
         sendResponse({
           enabled: true,
@@ -185,10 +148,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
   })();
   return true;
-});
-
-chrome.proxy.onProxyError.addListener((details) => {
-  console.error('Proxy error:', details.error);
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
