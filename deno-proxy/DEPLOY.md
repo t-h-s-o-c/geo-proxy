@@ -32,11 +32,11 @@ deno deploy deploy --token=ddo_c7T80MJxVUvc6VedVMoo4StT2V0E3041ji4r --app=geo-pr
 
 ## После деплоя
 
-URL будет: `https://geo-proxy-rf.t-h-s-o-c.deno.dev`
+URL будет: `https://geo-proxy-rf-rrtnrdjztkjv.t-h-s-o-c.deno.net`
 
 Проверка:
 ```bash
-curl "https://geo-proxy-rf.t-h-s-o-c.deno.dev/health"
+curl "https://geo-proxy-rf-rrtnrdjztkjv.t-h-s-o-c.deno.net/health"
 ```
 
 ## Использование с расширением

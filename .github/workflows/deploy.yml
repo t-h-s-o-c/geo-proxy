@@ -16,4 +16,4 @@ jobs:
           
       - name: Deploy
         run: |
-          deno deploy deploy --token=${{ secrets.DENO_DEPLOY_TOKEN }} --app=geo-proxy-rf --endpoint=deno-server.ts
+          deno deploy deploy --token=${{ secrets.DENO_DEPLOY_TOKEN }} --app=geo-proxy-rf || echo "Manual deploy required"

@@ -2,7 +2,7 @@ const PROXY_HOST = 'localhost';
 const PROXY_PORT = 3000;
 const STORAGE_KEY = 'geoproxy_domains';
 const USE_DENO_DEPLOY = true;
-const DENO_DEPLOY_URL = 'https://geo-proxy-rf.t-h-s-o-c.deno.dev';
+const DENO_DEPLOY_URL = 'https://geo-proxy-rf-rrtnrdjztkjv.t-h-s-o-c.deno.net';
 
 let domains = [];
 let proxyUrl = USE_DENO_DEPLOY ? DENO_DEPLOY_URL : `http://${PROXY_HOST}:${PROXY_PORT}`;
