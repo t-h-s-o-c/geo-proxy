@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="status-indicator">
+        <span class="status-dot active"></span>
+        <span class="status-text">Geo Proxy</span>
+      </div>
+    </div>
+    
+    <div class="current-tab">
+      <div class="label">Current Domain</div>
+      <div class="domain" id="currentDomain">Loading...</div>
+      <div class="domain-status" id="currentDomainStatus">
+        <span class="badge proxy">PROXY</span>
+      </div>
+    </div>
+    
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="blacklistCount">0</div>
+        <div class="stat-label">Blacklisted</div>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button class="btn primary" id="addToBlacklistBtn">Add to Blacklist</button>
+      <button class="btn secondary" id="openEditorBtn">Open Editor</button>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <span>Geo Proxy v1.0.0</span>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
