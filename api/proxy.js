@@ -7,8 +7,24 @@ function isRussianDomain(hostname) {
   return hostname.endsWith('.ru') || hostname.endsWith('.рф');
 }
 
-export default async function handler(req) {
-  const urlParam = req.nextUrl.searchParams.get('url');
+function parseUrl(input) {
+  try {
+    if (!input.startsWith('http')) {
+      input = 'https://' + input;
+    }
+    return new URL(input);
+  } catch {
+    return null;
+  }
+}
+
+export default async function handler(request) {
+  let urlParam;
+  try {
+    urlParam = new URL(request.url).searchParams.get('url');
+  } catch {
+    urlParam = null;
+  }
   
   if (!urlParam) {
     return new Response(JSON.stringify({ error: 'Missing url parameter' }), {
@@ -17,9 +33,15 @@ export default async function handler(req) {
     });
   }
 
-  const targetUrl = urlParam.startsWith('http') ? urlParam : 'https://' + urlParam;
+  const parsedUrl = parseUrl(urlParam);
+  if (!parsedUrl) {
+    return new Response(JSON.stringify({ error: 'Invalid URL format' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
   
-  if (isRussianDomain(new URL(targetUrl).hostname)) {
+  if (isRussianDomain(parsedUrl.hostname)) {
     return new Response(JSON.stringify({ error: 'Russian domains blocked' }), {
       status: 403,
       headers: { 'Content-Type': 'application/json' },
@@ -27,13 +49,16 @@ export default async function handler(req) {
   }
 
   try {
-    const response = await fetch(targetUrl);
+    const response = await fetch(parsedUrl.toString(), {
+      redirect: 'follow',
+    });
+
+    const headers = new Headers(response.headers);
+    headers.set('Access-Control-Allow-Origin', '*');
 
     return new Response(response.body, {
       status: response.status,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers,
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
