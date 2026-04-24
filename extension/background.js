@@ -21,34 +21,45 @@ async function loadBlacklist() {
 }
 
 async function updateProxyRules() {
-  const rules = await chrome.declarativeNetRequest.getDynamicRules();
-  await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: rules.map(r => r.id),
-    addRules: []
-  });
-
-  const blacklistPatterns = blacklist.filter(d => d.active).map(d => d.pattern);
-  
-  const rulePromises = [];
-  
-  blacklistPatterns.forEach((pattern, index) => {
-    const urlPattern = patternToUrlPattern(pattern);
+  try {
+    const rules = await chrome.declarativeNetRequest.getDynamicRules();
+    const existingIds = rules.map(r => r.id);
     
-    rulePromises.push({
-      id: index + 1,
-      priority: 1,
-      action: { type: 'direct' },
-      condition: {
-        urlFilter: urlPattern,
-        resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'script', 'stylesheet', 'object', 'ping', 'csp_report', 'media', 'websocket', 'other']
-      }
-    });
-  });
+    if (existingIds.length > 0) {
+      await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: existingIds,
+        addRules: []
+      });
+    }
 
-  if (rulePromises.length > 0) {
-    await chrome.declarativeNetRequest.updateDynamicRules({
-      addRules: rulePromises
+    const blacklistPatterns = blacklist.filter(d => d.active).map(d => d.pattern);
+    
+    const newRules = [];
+    const baseId = Date.now() % 100000;
+    
+    blacklistPatterns.forEach((pattern, index) => {
+      const urlPattern = patternToUrlPattern(pattern);
+      
+      newRules.push({
+        id: baseId + index,
+        priority: 1,
+        action: { type: 'direct' },
+        condition: {
+          urlFilter: urlPattern,
+          resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'script', 'stylesheet', 'object', 'ping', 'csp_report', 'media', 'websocket', 'other']
+        }
+      });
     });
+
+    if (newRules.length > 0) {
+      await chrome.declarativeNetRequest.updateDynamicRules({
+        addRules: newRules
+      });
+    }
+    
+    console.log('Proxy rules updated:', newRules.length, 'rules');
+  } catch (error) {
+    console.error('Error updating proxy rules:', error);
   }
 }
 
