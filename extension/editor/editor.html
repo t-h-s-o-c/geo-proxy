@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geo Proxy - Domain Editor</title>
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Geo Proxy - Domain Editor</h1>
+      <div class="subtitle">Blacklist mode: domains in blacklist go DIRECT, others go through PROXY</div>
+    </div>
+    
+    <div class="controls">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search domains...">
+      </div>
+      
+      <div class="add-domain">
+        <input type="text" id="newDomainInput" placeholder="Add domain (e.g., example.com)">
+        <button class="btn primary" id="addDomainBtn">Add</button>
+      </div>
+      
+      <div class="presets">
+        <button class="btn secondary" id="presetRuBtn">Add RU</button>
+        <button class="btn secondary" id="importBtn">Import</button>
+        <button class="btn secondary" id="exportBtn">Export</button>
+      </div>
+    </div>
+    
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="totalCount">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="activeCount">0</div>
+        <div class="stat-label">Active</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="inactiveCount">0</div>
+        <div class="stat-label">Inactive</div>
+      </div>
+    </div>
+    
+    <div class="domain-list" id="domainList">
+      <div class="empty-state">No domains in blacklist</div>
+    </div>
+  </div>
+  
+  <div class="modal" id="importModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Import Domains</h2>
+        <button class="close-btn" id="closeImportModal">&times;</button>
+      </div>
+      <textarea id="importTextarea" placeholder="Paste domains (one per line or JSON array)"></textarea>
+      <div class="modal-actions">
+        <button class="btn primary" id="confirmImportBtn">Import</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal" id="exportModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Export Domains</h2>
+        <button class="close-btn" id="closeExportModal">&times;</button>
+      </div>
+      <textarea id="exportTextarea" readonly></textarea>
+      <div class="modal-actions">
+        <button class="btn primary" id="copyExportBtn">Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="editor.js"></script>
+</body>
+</html>
