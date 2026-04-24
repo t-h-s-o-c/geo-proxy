@@ -1,0 +1,11 @@
+{
+  "name": "geo-proxy",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "vercel": "^41.0.0"
+  },
+  "scripts": {
+    "deploy": "vercel --yes"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "geo-proxy",
+  "version": 1,
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/proxy"
+    }
+  ]
+}
