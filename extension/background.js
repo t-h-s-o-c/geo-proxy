@@ -1,34 +1,40 @@
-const PROXY_URL = 'https://geo-proxy-delta.vercel.app/api/proxy';
+const PROXY_URL = 'https://geo-proxy-delta.vercel.app/api/proxy?h=';
+
+const DEFAULT_WHITELIST = [
+  '*.anthropic.com',
+  '*.claude.ai', 
+  '*.openai.com',
+  '*.google.com',
+  '*.googleapis.com',
+  '*.github.com',
+  '*.githubusercontent.com',
+  '*.ollama.com',
+  'api.aitoken.dev',
+  'httpbin.org',
+];
 
 const DEFAULT_BLACKLIST = [
   { pattern: '*.ru', description: 'Russia TLD', active: true },
   { pattern: '*.рф', description: 'Russia TLD (Cyrillic)', active: true },
 ];
 
-let blacklist = [];
-let proxyUrl = PROXY_URL;
+let whitelist = DEFAULT_WHITELIST;
+let blacklist = DEFAULT_BLACKLIST;
+let proxyEnabled = true;
 
-async function loadBlacklist() {
-  const stored = await chrome.storage.local.get(['blacklist', 'proxyUrl']);
+async function loadSettings() {
+  const stored = await chrome.storage.local.get(['whitelist', 'blacklist', 'proxyEnabled']);
+  whitelist = stored.whitelist || DEFAULT_WHITELIST;
   blacklist = stored.blacklist || DEFAULT_BLACKLIST;
-  proxyUrl = stored.proxyUrl || PROXY_URL;
-  
-  if (!stored.blacklist) {
-    await chrome.storage.local.set({ blacklist: DEFAULT_BLACKLIST });
-  }
+  proxyEnabled = stored.proxyEnabled !== false;
   
   updateProxyRules();
 }
 
 async function updateProxyRules() {
-  console.log('Updating proxy rules...');
-  
   try {
     const rules = await chrome.declarativeNetRequest.getDynamicRules();
-    console.log('Existing rules:', rules.length);
-    
     const existingIds = rules.map(r => r.id);
-    console.log('Existing IDs:', existingIds);
     
     if (existingIds.length > 0) {
       await chrome.declarativeNetRequest.updateDynamicRules({
@@ -36,40 +42,60 @@ async function updateProxyRules() {
         addRules: []
       });
     }
-
-    const blacklistPatterns = blacklist.filter(d => d.active).map(d => d.pattern);
-    console.log('Blacklist patterns:', blacklistPatterns);
     
-    if (blacklistPatterns.length === 0) {
-      console.log('No blacklist patterns, skipping rules');
+    if (!proxyEnabled) {
+      console.log('Proxy disabled');
       return;
     }
+
+    const blockedPatterns = blacklist.filter(d => d.active).map(d => d.pattern);
+    const allowedPatterns = whitelist;
     
     const newRules = [];
     const baseId = Math.floor(Math.random() * 90000) + 10000;
     
-    blacklistPatterns.forEach((pattern, index) => {
+    // Block Russian TLDs
+    blockedPatterns.forEach((pattern, index) => {
       const urlPattern = patternToUrlPattern(pattern);
-      console.log('Creating rule:', pattern, '->', urlPattern);
       
       newRules.push({
         id: baseId + index,
         priority: 1,
-        action: { type: 'direct' },
+        action: { type: 'block' },
         condition: {
           urlFilter: urlPattern,
-          resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'script', 'stylesheet', 'object', 'ping', 'csp_report', 'media', 'websocket', 'other']
+          resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'script', 'stylesheet']
+        }
+      });
+    });
+    
+    // Redirect allowed domains to proxy
+    allowedPatterns.forEach((pattern, index) => {
+      const urlPattern = patternToUrlPattern(pattern);
+      
+      newRules.push({
+        id: baseId + 100 + index,
+        priority: 2,
+        action: { 
+          type: 'redirect',
+          redirect: { url: PROXY_URL + '<url>' }
+        },
+        condition: {
+          urlFilter: urlPattern,
+          resourceTypes: ['main_frame', 'sub_frame', 'xmlhttprequest', 'script', 'stylesheet']
         }
       });
     });
 
-    const result = await chrome.declarativeNetRequest.updateDynamicRules({
-      addRules: newRules
-    });
+    if (newRules.length > 0) {
+      await chrome.declarativeNetRequest.updateDynamicRules({
+        addRules: newRules
+      });
+    }
     
-    console.log('Rules updated successfully, new rules:', newRules.length);
+    console.log('Rules updated:', newRules.length);
   } catch (error) {
-    console.error('Error updating proxy rules:', error.message || error);
+    console.error('Error:', error.message || error);
   }
 }
 
@@ -191,11 +217,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  loadBlacklist();
+  loadSettings();
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  loadBlacklist();
+  loadSettings();
 });
 
-loadBlacklist();
+loadSettings();
