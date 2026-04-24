@@ -21,9 +21,14 @@ async function loadBlacklist() {
 }
 
 async function updateProxyRules() {
+  console.log('Updating proxy rules...');
+  
   try {
     const rules = await chrome.declarativeNetRequest.getDynamicRules();
+    console.log('Existing rules:', rules.length);
+    
     const existingIds = rules.map(r => r.id);
+    console.log('Existing IDs:', existingIds);
     
     if (existingIds.length > 0) {
       await chrome.declarativeNetRequest.updateDynamicRules({
@@ -33,12 +38,19 @@ async function updateProxyRules() {
     }
 
     const blacklistPatterns = blacklist.filter(d => d.active).map(d => d.pattern);
+    console.log('Blacklist patterns:', blacklistPatterns);
+    
+    if (blacklistPatterns.length === 0) {
+      console.log('No blacklist patterns, skipping rules');
+      return;
+    }
     
     const newRules = [];
-    const baseId = Date.now() % 100000;
+    const baseId = Math.floor(Math.random() * 90000) + 10000;
     
     blacklistPatterns.forEach((pattern, index) => {
       const urlPattern = patternToUrlPattern(pattern);
+      console.log('Creating rule:', pattern, '->', urlPattern);
       
       newRules.push({
         id: baseId + index,
@@ -51,15 +63,13 @@ async function updateProxyRules() {
       });
     });
 
-    if (newRules.length > 0) {
-      await chrome.declarativeNetRequest.updateDynamicRules({
-        addRules: newRules
-      });
-    }
+    const result = await chrome.declarativeNetRequest.updateDynamicRules({
+      addRules: newRules
+    });
     
-    console.log('Proxy rules updated:', newRules.length, 'rules');
+    console.log('Rules updated successfully, new rules:', newRules.length);
   } catch (error) {
-    console.error('Error updating proxy rules:', error);
+    console.error('Error updating proxy rules:', error.message || error);
   }
 }
 
